@@ -62,9 +62,9 @@ int wmain(int argc, wchar_t *argv[]) {
         /* Mark input as resizable by setting of a resize algorithm.
          * In this case we will be able to set an input blob of any shape to an infer request.
          * Resize and layout conversions are executed automatically during inference */
-        input_info->getPreProcess().setResizeAlgorithm(RESIZE_BILINEAR);
+        //input_info->getPreProcess().setResizeAlgorithm(RESIZE_BILINEAR);
         input_info->setLayout(Layout::NHWC);
-        input_info->setPrecision(Precision::U8);
+        input_info->setPrecision(Precision::FP32);
 
         // --------------------------- Prepare output blobs ----------------------------------------------------
         DataPtr output_info = network.getOutputsInfo().begin()->second;
@@ -83,14 +83,37 @@ int wmain(int argc, wchar_t *argv[]) {
 
         // --------------------------- 6. Prepare input --------------------------------------------------------
         /* Read input image to a blob and set it to an infer request without resize and layout conversions. */
-        cv::Mat image = cv::imread(input_image_path);
-        Blob::Ptr imgBlob = wrapMat2Blob(image);  // just wrap Mat data by Blob::Ptr without allocating of new memory
+
+        //cv::Mat originalImage = cv::imread(input_image_path, cv::ImreadModes::IMREAD_GRAYSCALE);
+        cv::Mat originalImage = cv::imread(input_image_path);
+        // Grayscale & resize image to fit the dimensions that the model is trained for
+        cv::Mat image;
+        cv::cvtColor(originalImage, image, cv::COLOR_BGR2GRAY);
+
+        cv::Mat resizedImage;
+        cv::resize(image, resizedImage, cv::Size(224, 224), 0, 0, cv::INTER_LINEAR);
+
+        // Convert a vector/matrix of unsigned 8-bit int values (between 0-255)
+        // to 32-bit float values (between 0-1)
+        cv::Mat convertedImage;
+        resizedImage.convertTo(convertedImage, CV_32FC1, 1 / 255.0);
+
+        //Blob::Ptr imgBlob = wrapMat2Blob(image);  // just wrap Mat data by Blob::Ptr without allocating of new memory
+        InferenceEngine::TensorDesc tDesc(InferenceEngine::Precision::FP32,
+                                            {1, (long unsigned int)convertedImage.channels(), (long unsigned int)convertedImage.size().height, (long unsigned int)convertedImage.size().width},
+                                            InferenceEngine::Layout::NHWC);
+        Blob::Ptr imgBlob = make_shared_blob<float>(tDesc, reinterpret_cast<float*>(convertedImage.data));
+
+
+        std::cout << "test 1" << std::endl;
         infer_request.SetBlob(input_name, imgBlob);  // infer_request accepts input blob of any size
+        std::cout << "test 2" << std::endl;
         // -----------------------------------------------------------------------------------------------------
 
         // --------------------------- 7. Do inference --------------------------------------------------------
         /* Running the request synchronously */
         infer_request.Infer();
+        std::cout << "test 3" << std::endl;
         // -----------------------------------------------------------------------------------------------------
 
         // --------------------------- 8. Process output ------------------------------------------------------
