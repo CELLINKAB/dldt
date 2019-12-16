@@ -66,10 +66,10 @@ public:
         TopResults(_nTop, *_outBlob, results);
 
         /** Print the result iterating over each batch **/
-        std::cout << std::endl << "Top " << _nTop << " results:" << std::endl << std::endl;
+        //std::cout << std::endl << "Top " << _nTop << " results:" << std::endl << std::endl;
         for (unsigned int image_id = 0; image_id < _batchSize; ++image_id) {
             std::cout << "Image " << _imageNames[image_id] << std::endl << std::endl;
-            printHeader();
+            //printHeader();
 
             for (size_t id = image_id * _nTop, cnt = 0; id < (image_id + 1) * _nTop; ++cnt, ++id) {
                 std::cout.precision(7);
@@ -86,7 +86,7 @@ public:
                 }
                 std::cout << std::endl;
             }
-            std::cout << std::endl;
+            //std::cout << std::endl;
         }
     }
 };
