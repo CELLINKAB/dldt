@@ -104,29 +104,23 @@ int wmain(int argc, wchar_t *argv[]) {
                                             InferenceEngine::Layout::NHWC);
         Blob::Ptr imgBlob = make_shared_blob<float>(tDesc, reinterpret_cast<float*>(convertedImage.data));
 
-
-        std::cout << "test 1" << std::endl;
         infer_request.SetBlob(input_name, imgBlob);  // infer_request accepts input blob of any size
-        std::cout << "test 2" << std::endl;
         // -----------------------------------------------------------------------------------------------------
 
         // --------------------------- 7. Do inference --------------------------------------------------------
         /* Running the request synchronously */
         infer_request.Infer();
-        std::cout << "test 3" << std::endl;
         // -----------------------------------------------------------------------------------------------------
 
         // --------------------------- 8. Process output ------------------------------------------------------
         Blob::Ptr output = infer_request.GetBlob(output_name);
         // Print classification results
-        ClassificationResult classificationResult(output, {fileNameToString(input_image_path)});
+        ClassificationResult classificationResult(output, {fileNameToString(input_image_path)}, 1, 2, {"yes", "no"});
         classificationResult.print();
         // -----------------------------------------------------------------------------------------------------
     } catch (const std::exception & ex) {
         std::cerr << ex.what() << std::endl;
         return EXIT_FAILURE;
     }
-    std::cout << "This sample is an API example, for any performance measurements "
-                 "please use the dedicated benchmark_app tool" << std::endl;
     return EXIT_SUCCESS;
 }
